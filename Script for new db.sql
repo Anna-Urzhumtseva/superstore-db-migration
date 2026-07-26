@@ -72,7 +72,7 @@ t41 AS (
         o."Ship Mode" AS ShipMode,  
         o."Country/Region" AS Country,
         o.City,
-        o.State,                               -- ← исправлено: добавлена запятая
+        o.State,                               
         ifnull(o."Postal Code", 00000.0) AS PostalCode 
     FROM Orders o
 ),
@@ -80,7 +80,7 @@ t42 AS (
     SELECT DISTINCT 
         t41.OrderID,
         t41.OrderDate,
-        t41.Region,                            -- ← исправлено: вместо ifnull(o.Region, '-')
+        t41.Region,                            
         t41.CustomerID,
         t41.ShipMode,  
         a.AddressesID
@@ -99,8 +99,8 @@ newOrders AS (
         t42.CustomerID,
         t42.AddressesID
     FROM t42
-    LEFT JOIN newPeople p ON p.region = t42.Region          -- ← исправлено: t42 вместо t4
-    LEFT JOIN newTypeShip ts ON ts.ShipMode = t42.ShipMode  -- ← исправлено: t42 вместо t4
+    LEFT JOIN newPeople p ON p.region = t42.Region          
+    LEFT JOIN newTypeShip ts ON ts.ShipMode = t42.ShipMode  
     ORDER BY t42.OrderDate, t42.CustomerID, t42.OrderID
 ),
 t6 AS (

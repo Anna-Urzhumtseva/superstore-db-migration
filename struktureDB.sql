@@ -1,4 +1,4 @@
--- Показать структуру каждой таблицы (вместо table_name подставьте реальное имя)
+-- Показать структуру каждой таблицы 
 PRAGMA table_info(Orders);
 PRAGMA table_info(OrderDetails);
 PRAGMA table_info(Product);

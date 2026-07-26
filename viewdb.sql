@@ -17,7 +17,7 @@ SELECT
     a.City,
     a.State,
     a.PostalCode,
-    p.ProductID AS ProductCodeText,  -- текстовый код, если понадобится
+    p.ProductID AS ProductCodeText,  
     p.Category,
     p.SubCategory,
     p.ProductName,
