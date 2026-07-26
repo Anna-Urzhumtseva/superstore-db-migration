@@ -44,9 +44,7 @@ cursor.executescript('''
         Country TEXT,
         City TEXT,
         State TEXT,
-        PostalCode TEXT,
-        CustomerID TEXT,
-        FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID)
+        PostalCode TEXT
     );
     CREATE TABLE Orders (
         OrderID TEXT PRIMARY KEY,
@@ -54,9 +52,11 @@ cursor.executescript('''
         PeopleID INTEGER,
         CustomerID TEXT,
         ShipID INTEGER,
+        AddressesID INTEGER,
         FOREIGN KEY (PeopleID) REFERENCES People(PeopleID),
         FOREIGN KEY (CustomerID) REFERENCES Customers(CustomerID),
-        FOREIGN KEY (ShipID) REFERENCES typeShip(ShipID)
+        FOREIGN KEY (ShipID) REFERENCES typeShip(ShipID),
+        FOREIGN KEY (AddressesID) REFERENCES Addresses(AddressesID)
     );
     CREATE TABLE dateShip (
         dateShipID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -115,18 +115,27 @@ try:
     print(f"✅ typeShip: {len(df_typeship)} записей")
 
     df_addresses = pd.read_excel(file_path, sheet_name='Addresses')
-    rename_columns(df_addresses, {'Postal Code': 'PostalCode', 'Customer ID': 'CustomerID'})
+    rename_columns(df_addresses, {'Postal Code': 'PostalCode'})  # убираем CustomerID, его нет
     df_addresses.to_sql('Addresses', conn, if_exists='append', index=False)
     print(f"✅ Addresses: {len(df_addresses)} записей")
 
+    # Загрузка Orders с проверкой наличия столбца AddressesID
     df_orders = pd.read_excel(file_path, sheet_name='Orders')
     rename_columns(df_orders, {
         'Order ID': 'OrderID',
         'Order Date': 'OrderDate',
         'Ship ID': 'ShipID',
         'People ID': 'PeopleID',
-        'Customer ID': 'CustomerID'
+        'Customer ID': 'CustomerID',
+        'Addresses ID': 'AddressesID'  # если столбца нет, rename пропустит
     })
+    
+    # Если столбца AddressesID нет в данных, создаём его с NULL (можно заполнить позже)
+    if 'AddressesID' not in df_orders.columns:
+        df_orders['AddressesID'] = None
+        print("⚠️ В листе Orders нет столбца 'Addresses ID', добавлен NULL-столбец.")
+        print("   Чтобы заполнить, запустите ETL-скрипт для создания связей.")
+    
     df_orders.to_sql('Orders', conn, if_exists='append', index=False)
     print(f"✅ Orders: {len(df_orders)} записей")
 

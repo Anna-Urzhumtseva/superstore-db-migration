@@ -20,9 +20,9 @@ t2 AS (
         "Country/Region" AS Country,
         City,
         State,
-        "Postal Code" AS PostalCode,
-        "Customer ID" AS CustomerID
+        ifnull("Postal Code", 00000.0) AS PostalCode
     FROM Orders
+    ORDER BY "Country/Region", State, City, "Postal Code"
 ),
 newAddresses AS (
     SELECT DISTINCT
@@ -30,9 +30,9 @@ newAddresses AS (
         City,
         State,
         PostalCode,
-        CustomerID,
-        ROW_NUMBER() OVER (ORDER BY CustomerID, Country, City, State, PostalCode) AS AddressesID
+        ROW_NUMBER() OVER (ORDER BY Country, City, State, PostalCode) AS AddressesID
     FROM t2
+    ORDER BY Country, City, State, PostalCode
 ),
 t3 AS (
     SELECT DISTINCT 
@@ -63,25 +63,45 @@ newCustomers AS (
         o.Segment 
     FROM Orders o 
 ),
-t4 AS (
+t41 AS (
     SELECT DISTINCT 
-        "Order ID" AS OrderID,
-        "Order Date" AS OrderDate,
-        COALESCE(Region, '-') AS Region,
-        COALESCE("Customer ID", '-') AS CustomerID,
-        COALESCE("Ship Mode", '-') AS ShipMode   
-    FROM Orders
+        o."Order ID" AS OrderID,
+        o."Order Date" AS OrderDate,
+        ifnull(o.Region, '-') AS Region,
+        o."Customer ID" AS CustomerID,
+        o."Ship Mode" AS ShipMode,  
+        o."Country/Region" AS Country,
+        o.City,
+        o.State,                               -- ← исправлено: добавлена запятая
+        ifnull(o."Postal Code", 00000.0) AS PostalCode 
+    FROM Orders o
+),
+t42 AS (
+    SELECT DISTINCT 
+        t41.OrderID,
+        t41.OrderDate,
+        t41.Region,                            -- ← исправлено: вместо ifnull(o.Region, '-')
+        t41.CustomerID,
+        t41.ShipMode,  
+        a.AddressesID
+    FROM t41
+    LEFT JOIN newAddresses a ON a.City = t41.City 
+                             AND a.Country = t41.Country 
+                             AND a.State = t41.State 
+                             AND a.PostalCode = t41.PostalCode  
 ),
 newOrders AS (
     SELECT DISTINCT
-        t4.OrderID,
-        t4.OrderDate,
+        t42.OrderID,
+        t42.OrderDate,
         ts.ShipID,
         p.PeopleID,
-        t4.CustomerID
-    FROM t4
-    LEFT JOIN newPeople p ON p.region = t4.Region 
-    LEFT JOIN newTypeShip ts ON ts.ShipMode = t4.ShipMode
+        t42.CustomerID,
+        t42.AddressesID
+    FROM t42
+    LEFT JOIN newPeople p ON p.region = t42.Region          -- ← исправлено: t42 вместо t4
+    LEFT JOIN newTypeShip ts ON ts.ShipMode = t42.ShipMode  -- ← исправлено: t42 вместо t4
+    ORDER BY t42.OrderDate, t42.CustomerID, t42.OrderID
 ),
 t6 AS (
     SELECT DISTINCT 
@@ -93,7 +113,7 @@ t6 AS (
         Profit
     FROM Orders o
     LEFT JOIN newProduct p ON p.ProductID = o."Product ID" AND p.ProductName = o."Product Name" 
-    order by "Order ID",ProductCode,Quantity,Sales,Discount,Profit
+    ORDER BY "Order ID", ProductCode, Quantity, Sales, Discount, Profit
 ),
 newOrderDetails AS (
     SELECT DISTINCT
@@ -103,35 +123,37 @@ newOrderDetails AS (
         Sales,
         Discount,
         Profit,
-        ROW_NUMBER() OVER (ORDER BY OrderID,ProductCode,Quantity,Sales,Discount,Profit) AS DetailID
+        ROW_NUMBER() OVER (ORDER BY OrderID, ProductCode, Quantity, Sales, Discount, Profit) AS DetailID
     FROM t6
 ),
-t7 as (
-	SELECT DISTINCT
-	    "Order ID" AS OrderID,
-	    "Ship Date" AS ShipDate,
-	    ts.ShipID 
-	FROM Orders o
-	left join newTypeShip ts on ts.ShipMode = o."Ship Mode" 
-	order by "Order ID", "Ship Date",ts.ShipID 
+t7 AS (
+    SELECT DISTINCT
+        "Order ID" AS OrderID,
+        "Ship Date" AS ShipDate,
+        ts.ShipID 
+    FROM Orders o
+    LEFT JOIN newTypeShip ts ON ts.ShipMode = o."Ship Mode" 
+    ORDER BY "Order ID", "Ship Date", ts.ShipID 
 ),
-newDateShip as (
-	SELECT DISTINCT
-		ShipID,OrderID,ShipDate,
-		ROW_NUMBER() OVER (ORDER BY OrderID,ShipDate,ShipID) AS dateShipID
-	FROM t7
-	order by  OrderID,ShipDate,ShipID
+newDateShip AS (
+    SELECT DISTINCT
+        ShipID,
+        OrderID,
+        ShipDate,
+        ROW_NUMBER() OVER (ORDER BY OrderID, ShipDate, ShipID) AS dateShipID
+    FROM t7
+    ORDER BY OrderID, ShipDate, ShipID
 ),
-t8 as(
-select DISTINCT  r.returned, od.DetailID 
-from returns r
-LEFT JOIN newOrderDetails  od ON od.OrderID = r."Order ID"
-ORDER by  od.DetailID ,r.returned
+t8 AS (
+    SELECT DISTINCT r.returned, od.DetailID 
+    FROM returns r
+    LEFT JOIN newOrderDetails od ON od.OrderID = r."Order ID"
+    ORDER BY od.DetailID, r.returned
 ),
-newReturns as(
-SELECT returned,DetailID,
-ROW_NUMBER() OVER (ORDER BY DetailID,returned) AS ReturnID
-FROM t8  
-ORDER by  DetailID,returned
+newReturns AS (
+    SELECT returned, DetailID,
+        ROW_NUMBER() OVER (ORDER BY DetailID, returned) AS ReturnID
+    FROM t8  
+    ORDER BY DetailID, returned
 )
-select * from newReturns 
+SELECT * FROM newOrders ;   
