@@ -47,6 +47,7 @@
 - **Python** — `pandas`, `sqlite3`, `openpyxl`
 - **SQL** — сложные запросы с `CTE`, `ROW_NUMBER()`, `LEFT JOIN`
 - **DBeaver** — визуализация схемы и контроль
+- **POWER BI** — BI система
 - **VS Code** — среда разработки
 
 ---

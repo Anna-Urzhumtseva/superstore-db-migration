@@ -1,7 +1,13 @@
 import pandas as pd
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect('newdatabase.db')
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+DB_FILE = BASE_DIR / "SQLitedb" / "newdatabase.db"
+EXCEL_FILE = BASE_DIR / "Sample_-_Superstore MODIFICATED.xlsx"
+
+conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
 cursor.execute("PRAGMA foreign_keys = ON;")
 
@@ -87,7 +93,7 @@ cursor.executescript('''
 
 print("✅ Таблицы созданы!")
 
-file_path = 'Sample_-_Superstore MODIFICATED.xlsx'
+file_path = EXCEL_FILE
 
 def rename_columns(df, mapping):
     for old, new in mapping.items():

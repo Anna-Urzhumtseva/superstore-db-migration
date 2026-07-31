@@ -1,14 +1,21 @@
 import pandas as pd
 import sqlite3
+from pathlib import Path
 
-# Подключаемся к базе (файл old_database.db)
-conn = sqlite3.connect('old_database.db')
+# Пути к файлам
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+DB_FILE = BASE_DIR / "SQLitedb" / "old_database.db"
+EXCEL_FILE = BASE_DIR / "Sample_-_Superstore.xlsx"
+
+# Подключаемся к базе
+conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
 
 # Загружаем Excel
-df_orders = pd.read_excel('Sample_-_Superstore.xlsx', sheet_name='Orders')
-df_people = pd.read_excel('Sample_-_Superstore.xlsx', sheet_name='People')
-df_returns = pd.read_excel('Sample_-_Superstore.xlsx', sheet_name='Returns')
+df_orders = pd.read_excel(EXCEL_FILE, sheet_name='Orders')
+df_people = pd.read_excel(EXCEL_FILE, sheet_name='People')
+df_returns = pd.read_excel(EXCEL_FILE, sheet_name='Returns')
 
 # Убираем дубли в People и Returns (чтобы не было ошибок PRIMARY KEY)
 df_people_unique = df_people.drop_duplicates(subset=['Region'], keep='first')
