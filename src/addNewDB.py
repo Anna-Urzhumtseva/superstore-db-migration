@@ -2,11 +2,13 @@ import pandas as pd
 import sqlite3
 from pathlib import Path
 
+# Пути к файлам
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DB_FILE = BASE_DIR / "SQLitedb" / "newdatabase.db"
-EXCEL_FILE = BASE_DIR / "Sample_-_Superstore MODIFICATED.xlsx"
+DB_FILE = BASE_DIR / "data" / "sqlite" / "newdatabase.db"
+EXCEL_FILE = BASE_DIR / "data" / "raw" / "Sample_-_Superstore MODIFICATED.xlsx"
 
+# Подключаемся к базе
 conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
 cursor.execute("PRAGMA foreign_keys = ON;")
