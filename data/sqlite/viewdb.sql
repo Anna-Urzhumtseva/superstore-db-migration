@@ -1,38 +1,32 @@
 CREATE VIEW v_sales_dashboard AS
-SELECT 
-    od.DetailID,
-    od.OrderID,
-    od.ProductCode,
-    od.Quantity,
-    od.Sales,
-    od.Discount,
-    od.Profit,
-    o.OrderDate,
-    ds.ShipDate,
-    ts.ShipMode,
-    c.CustomerID,
-    c.CustomerName,
-    c.Segment,
-    a.Country,
-    a.City,
-    a.State,
-    a.PostalCode,
-    p.ProductID AS ProductCodeText,  
-    p.Category,
-    p.SubCategory,
-    p.ProductName,
-    pe.Person AS Manager,
-    pe.Region,
-    r.Returned,
-    r.ReturnID
-FROM OrderDetails od
-LEFT JOIN Orders o ON od.OrderID = o.OrderID
-LEFT JOIN Customers c ON o.CustomerID = c.CustomerID
-LEFT JOIN Addresses a ON c.CustomerID = a.CustomerID
-LEFT JOIN Product p ON od.ProductCode = p.ProductCode
-LEFT JOIN People pe ON o.PeopleID = pe.PeopleID
-LEFT JOIN typeShip ts ON o.ShipID = ts.ShipID
-LEFT JOIN dateShip ds ON o.OrderID = ds.OrderID AND o.ShipID = ds.ShipID
-LEFT JOIN Returns r ON od.DetailID = r.DetailID;
+select 
+o.OrderID,
+o.OrderDate,
+ts.ShipMode,
+ds.ShipDate,
+p.Person,
+p.Region,
+c.CustomerName,
+c.Segment,
+a.City,
+a.Country,
+a.State,
+a.PostalCode,
+od.Discount,
+od.Profit,
+od.Quantity,
+od.Sales,
+r.Returned,
+p.Person,
+p.Region 
+from Orders o 
+left join typeShip ts on o.ShipID  = ts.ShipID 
+left join dateShip ds on ds.OrderID  = o.OrderID  
+left join People p on p.PeopleID = o.PeopleID 
+left join Customers c  on c.CustomerID = o.CustomerID 
+left join Addresses a on a.AddressesID = o.AddressesID 
+left join OrderDetails od on od.OrderID = o.OrderID
+left join "Returns" r on r.DetailID = od.DetailID 
+left join Product p2 on p2.ProductCode = od.ProductCode ;
 
 SELECT * FROM v_sales_dashboard LIMIT 10;
